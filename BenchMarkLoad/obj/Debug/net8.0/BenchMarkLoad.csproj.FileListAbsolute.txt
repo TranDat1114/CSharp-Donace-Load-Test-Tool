@@ -15,3 +15,4 @@ D:\Code\DoAnTotNghiep\tool\LoadTest\LoadTestCSharp\BenchMarkLoad\obj\Debug\net8.
 D:\Code\DoAnTotNghiep\tool\LoadTest\LoadTestCSharp\BenchMarkLoad\bin\Debug\net8.0\AsciiChart.Sharp.dll
 D:\Code\DoAnTotNghiep\tool\LoadTest\LoadTestCSharp\BenchMarkLoad\obj\Debug\net8.0\BenchMarkLoad.csproj.AssemblyReference.cache
 D:\Code\DoAnTotNghiep\tool\LoadTest\LoadTestCSharp\BenchMarkLoad\obj\Debug\net8.0\BenchMarkLoad.csproj.CopyComplete
+D:\Code\DoAnTotNghiep\tool\LoadTest\LoadTestCSharp\BenchMarkLoad\obj\Debug\net8.0\BenchMarkLoad.sourcelink.json

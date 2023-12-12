@@ -4,7 +4,8 @@ using System.IO;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-
+using AsciiChart.Sharp;
+namespace BenchMarkLoad;
 class Program
 {
     static async Task Main(string[] args)
@@ -43,6 +44,7 @@ class Program
         int successfulRequests = 0;
         int failedRequests = 0;
 
+        double[][] series = [new double[numRequests], new double[numRequests]];
         string[] jsonFiles = jsonFolderPath != null ? Directory.GetFiles(jsonFolderPath, "*.json") : [];
 
         if (jsonFiles.Length == 0 && jsonFolderPath != null)
@@ -78,12 +80,14 @@ class Program
                 if (response.IsSuccessStatusCode)
                 {
                     Console.WriteLine($"Successful request {i + 1} - Elapsed time: {stopwatch.ElapsedMilliseconds} ms");
+                    series[0][i] = stopwatch.ElapsedMilliseconds;
                     successfulRequests++;
 
                 }
                 else
                 {
                     Console.WriteLine($"Failed request {i + 1} - Status code: {response.StatusCode}");
+                    series[1][i] = stopwatch.ElapsedMilliseconds;
                     failedRequests++;
 
                 }
@@ -92,10 +96,12 @@ class Program
             {
                 if (response.IsSuccessStatusCode)
                 {
+                    series[0][i] = stopwatch.ElapsedMilliseconds;
                     successfulRequests++;
                 }
                 else
                 {
+                    series[1][i] = stopwatch.ElapsedMilliseconds;
                     failedRequests++;
                 }
             }
@@ -104,11 +110,28 @@ class Program
             averageResponseTime += stopwatch.ElapsedMilliseconds;
         }
 
+
         Console.WriteLine($"\nSummary:");
         Console.WriteLine($"Total Requests: {numRequests}");
         Console.WriteLine($"Successful Requests: {successfulRequests}");
         Console.WriteLine($"Failed Requests: {failedRequests}");
         Console.WriteLine($"Average response time: {averageResponseTime / numRequests} ms");
+
+        Console.WriteLine(AsciiChart.Sharp.AsciiChart.Plot(
+                series,
+                new Options
+                {
+                    AxisLabelFormat = "000.000 ms",
+                    Fill = '·',
+                    Height = 10,
+                    SeriesColors =
+                    [
+                        AnsiColor.Green,
+                        AnsiColor.Red,
+                    ],
+                    AxisLabelLeftMargin = 3,
+                    LabelColor = AnsiColor.Aqua,
+                }));
     }
     static async Task<HttpResponseMessage> SendRequestWithJson(HttpClient client, string url, string jsonFileName)
     {
