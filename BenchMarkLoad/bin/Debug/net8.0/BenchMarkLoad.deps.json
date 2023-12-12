@@ -1,0 +1,41 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "BenchMarkLoad/1.0.0": {
+        "dependencies": {
+          "AsciiChart.Sharp": "1.0.3"
+        },
+        "runtime": {
+          "BenchMarkLoad.dll": {}
+        }
+      },
+      "AsciiChart.Sharp/1.0.3": {
+        "runtime": {
+          "lib/netstandard1.0/AsciiChart.Sharp.dll": {
+            "assemblyVersion": "1.0.3.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "BenchMarkLoad/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "AsciiChart.Sharp/1.0.3": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-IvQO6ARvgbt8Dk9ifZOjf0NSgQautR4fw0AehIDCzEgaHM66Z55xcNF3zMPmBzymgC3jipvoj4WvfXqwxZiEgQ==",
+      "path": "asciichart.sharp/1.0.3",
+      "hashPath": "asciichart.sharp.1.0.3.nupkg.sha512"
+    }
+  }
+}

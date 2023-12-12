@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "fFNhU8TQfjH5Wj49M/bsdsFChRHbtED5nhKNACcG4SgEwgORL7HiTnnHF+gitZzZJHnKUkKceaC+eO5j8gt0LQ==",
+  "success": true,
+  "projectFilePath": "D:\\Code\\DoAnTotNghiep\\tool\\LoadTest\\LoadTestCSharp\\BenchMarkLoad\\BenchMarkLoad.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\PhuDatTran\\.nuget\\packages\\asciichart.sharp\\1.0.3\\asciichart.sharp.1.0.3.nupkg.sha512"
+  ],
+  "logs": []
+}
