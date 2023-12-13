@@ -36,6 +36,8 @@ class Program
         await RunBenchmark(url, numRequests, jsonFolderPath);
     }
 
+
+
     static async Task RunBenchmark(string url, int numRequests, string? jsonFolderPath)
     {
         using HttpClient client = new();
@@ -44,7 +46,15 @@ class Program
         int successfulRequests = 0;
         int failedRequests = 0;
 
-        double[][] series = [new double[numRequests], new double[numRequests]];
+        int numRequestsPerXTime = numRequests / (numRequests / 100);
+
+
+        string[] failedRequestsLog = [];
+
+        double[][] series = [new double[100], new double[100]];
+
+        int seriesPosition = 0;
+
         string[] jsonFiles = jsonFolderPath != null ? Directory.GetFiles(jsonFolderPath, "*.json") : [];
 
         if (jsonFiles.Length == 0 && jsonFolderPath != null)
@@ -53,16 +63,10 @@ class Program
             return;
         }
 
-        float averageResponseTimeAfter10Request = 0;
+        // float averageResponseTimeAfter10Request = 0;
         for (int i = 0; i < numRequests; i++)
         {
-            if (numRequests > 10 && i % (numRequests / 10) == 0)
-            {
-                Console.WriteLine($"Successful: {successfulRequests}, Failed: {failedRequests}, Average response time: {averageResponseTimeAfter10Request / 10} ms");
-                averageResponseTimeAfter10Request = 0;
-            }
-
-
+            
             stopwatch.Restart();
             HttpResponseMessage response;
             if (jsonFolderPath != null && i < jsonFiles.Length)
@@ -87,29 +91,45 @@ class Program
                 else
                 {
                     Console.WriteLine($"Failed request {i + 1} - Status code: {response.StatusCode}");
+
+                    if (!failedRequestsLog.Any(p => p == response.StatusCode.ToString()))
+                    {
+                        _ = failedRequestsLog.Append(response.StatusCode.ToString());
+                    }
                     series[1][i] = stopwatch.ElapsedMilliseconds;
                     failedRequests++;
-
                 }
             }
             else
             {
                 if (response.IsSuccessStatusCode)
                 {
-                    series[0][i] = stopwatch.ElapsedMilliseconds;
+                    if (i % numRequestsPerXTime == 0)
+                    {
+                        series[0][seriesPosition] = averageResponseTime;
+
+                        seriesPosition++;
+                    }
                     successfulRequests++;
                 }
                 else
                 {
-                    series[1][i] = stopwatch.ElapsedMilliseconds;
+                    if (!failedRequestsLog.Any(p => p == response.StatusCode.ToString()))
+                    {
+                        _ = failedRequestsLog.Append(response.StatusCode.ToString());
+                    }
+                    if (i % numRequestsPerXTime == 0)
+                    {
+
+                        series[1][seriesPosition] = averageResponseTime;
+                        seriesPosition++;
+                    }
                     failedRequests++;
                 }
             }
 
-            averageResponseTimeAfter10Request += stopwatch.ElapsedMilliseconds;
             averageResponseTime += stopwatch.ElapsedMilliseconds;
         }
-
 
         Console.WriteLine($"\nSummary:");
         Console.WriteLine($"Total Requests: {numRequests}");
@@ -133,6 +153,7 @@ class Program
                     LabelColor = AnsiColor.Aqua,
                 }));
     }
+
     static async Task<HttpResponseMessage> SendRequestWithJson(HttpClient client, string url, string jsonFileName)
     {
         // Tạo một đối tượng StringContent để chứa dữ liệu JSON
