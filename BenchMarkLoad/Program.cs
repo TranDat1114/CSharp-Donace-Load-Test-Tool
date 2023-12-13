@@ -158,7 +158,10 @@ class Program
         Console.WriteLine($"Failed Requests: {failedRequests}");
         Console.WriteLine($"Average response time: {averageResponseTime / numRequests} ms");
 
-        Console.WriteLine($"Failed requests log:");
+        if (failedRequestsLog.Length != 0)
+        {
+            Console.WriteLine($"Failed requests log:");
+        }
         foreach (var item in failedRequestsLog)
         {
             Console.WriteLine($"Failed request reason: {item}");
