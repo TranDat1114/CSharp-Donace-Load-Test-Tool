@@ -114,9 +114,10 @@ class Program
                 }
                 else
                 {
-                    if (!failedRequestsLog.Any(p => p == response.StatusCode.ToString()))
+                    var statusCode = response.StatusCode.ToString();
+                    if (!failedRequestsLog.Contains(statusCode))
                     {
-                        _ = failedRequestsLog.Append(response.StatusCode.ToString());
+                        failedRequestsLog = [.. failedRequestsLog, statusCode];
                     }
                     if (i % numRequestsPerXTime == 0)
                     {
