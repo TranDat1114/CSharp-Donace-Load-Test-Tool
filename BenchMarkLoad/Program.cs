@@ -45,8 +45,16 @@ class Program
         float averageResponseTime = 0;
         int successfulRequests = 0;
         int failedRequests = 0;
+        int numRequestsPerXTime;
 
-        int numRequestsPerXTime = numRequests / (numRequests / 100);
+        if (numRequests >= 1000)
+        {
+            numRequestsPerXTime = numRequests / (numRequests / 100);
+        }
+        else
+        {
+            numRequestsPerXTime = numRequests;
+        }
 
         float averageResponseTimeAfterXRequest = 0;
 
@@ -78,25 +86,29 @@ class Program
             }
             stopwatch.Stop();
 
-            if (numRequests <= 100)
+            if (numRequests < 100)
             {
                 if (response.IsSuccessStatusCode)
                 {
                     Console.WriteLine($"Successful request {i + 1} - Elapsed time: {stopwatch.ElapsedMilliseconds} ms");
-                    series[0][i] = stopwatch.ElapsedMilliseconds;
+                    series[0][seriesPosition] = stopwatch.ElapsedMilliseconds;
                     successfulRequests++;
+                    seriesPosition++;
 
                 }
                 else
                 {
                     Console.WriteLine($"Failed request {i + 1} - Status code: {response.StatusCode}");
 
-                    if (!failedRequestsLog.Any(p => p == response.StatusCode.ToString()))
+                    var statusCode = response.StatusCode.ToString();
+                    if (!failedRequestsLog.Contains(statusCode))
                     {
-                        _ = failedRequestsLog.Append(response.StatusCode.ToString());
+                        failedRequestsLog = [.. failedRequestsLog, statusCode];
                     }
-                    series[1][i] = stopwatch.ElapsedMilliseconds;
+                    series[1][seriesPosition] = stopwatch.ElapsedMilliseconds;
                     failedRequests++;
+                    seriesPosition++;
+
                 }
             }
             else
@@ -105,8 +117,8 @@ class Program
                 {
                     if (i % numRequestsPerXTime == 0)
                     {
-                        Console.WriteLine($"Successful: {successfulRequests}, Failed: {failedRequests}, Average response time: {averageResponseTimeAfterXRequest / numRequestsPerXTime} ms");
-                        series[0][seriesPosition] = averageResponseTimeAfterXRequest;
+                        Console.WriteLine($"After {i} Request| Successful: {successfulRequests}, Failed: {failedRequests}, Average response time: {averageResponseTimeAfterXRequest / numRequestsPerXTime} ms");
+                        series[0][seriesPosition] = averageResponseTimeAfterXRequest / numRequestsPerXTime;
                         averageResponseTimeAfterXRequest = 0;
                         seriesPosition++;
                     }
@@ -121,8 +133,8 @@ class Program
                     }
                     if (i % numRequestsPerXTime == 0)
                     {
-                        Console.WriteLine($"Successful: {successfulRequests}, Failed: {failedRequests}, Average response time: {averageResponseTimeAfterXRequest / numRequestsPerXTime} ms");
-                        series[1][seriesPosition] = averageResponseTimeAfterXRequest;
+                        Console.WriteLine($"After {i} Request| Successful: {successfulRequests}, Failed: {failedRequests}, Average response time: {averageResponseTimeAfterXRequest / numRequestsPerXTime} ms");
+                        series[1][seriesPosition] = averageResponseTimeAfterXRequest / numRequestsPerXTime;
                         averageResponseTimeAfterXRequest = 0;
                         seriesPosition++;
                     }
