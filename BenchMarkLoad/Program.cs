@@ -48,6 +48,7 @@ class Program
 
         int numRequestsPerXTime = numRequests / (numRequests / 100);
 
+        float averageResponseTimeAfterXRequest = 0;
 
         string[] failedRequestsLog = [];
 
@@ -63,10 +64,8 @@ class Program
             return;
         }
 
-        // float averageResponseTimeAfter10Request = 0;
         for (int i = 0; i < numRequests; i++)
         {
-            
             stopwatch.Restart();
             HttpResponseMessage response;
             if (jsonFolderPath != null && i < jsonFiles.Length)
@@ -79,7 +78,7 @@ class Program
             }
             stopwatch.Stop();
 
-            if (numRequests <= 10)
+            if (numRequests <= 100)
             {
                 if (response.IsSuccessStatusCode)
                 {
@@ -106,8 +105,9 @@ class Program
                 {
                     if (i % numRequestsPerXTime == 0)
                     {
-                        series[0][seriesPosition] = averageResponseTime;
-
+                        Console.WriteLine($"Successful: {successfulRequests}, Failed: {failedRequests}, Average response time: {averageResponseTimeAfterXRequest / numRequestsPerXTime} ms");
+                        series[0][seriesPosition] = averageResponseTimeAfterXRequest;
+                        averageResponseTimeAfterXRequest = 0;
                         seriesPosition++;
                     }
                     successfulRequests++;
@@ -120,14 +120,15 @@ class Program
                     }
                     if (i % numRequestsPerXTime == 0)
                     {
-
-                        series[1][seriesPosition] = averageResponseTime;
+                        Console.WriteLine($"Successful: {successfulRequests}, Failed: {failedRequests}, Average response time: {averageResponseTimeAfterXRequest / numRequestsPerXTime} ms");
+                        series[1][seriesPosition] = averageResponseTimeAfterXRequest;
+                        averageResponseTimeAfterXRequest = 0;
                         seriesPosition++;
                     }
                     failedRequests++;
                 }
             }
-
+            averageResponseTimeAfterXRequest += stopwatch.ElapsedMilliseconds;
             averageResponseTime += stopwatch.ElapsedMilliseconds;
         }
 
@@ -136,6 +137,11 @@ class Program
         Console.WriteLine($"Successful Requests: {successfulRequests}");
         Console.WriteLine($"Failed Requests: {failedRequests}");
         Console.WriteLine($"Average response time: {averageResponseTime / numRequests} ms");
+
+        foreach (var item in failedRequestsLog)
+        {
+            Console.WriteLine($"Failed request reason: {item}");
+        }
 
         Console.WriteLine(AsciiChart.Sharp.AsciiChart.Plot(
                 series,
