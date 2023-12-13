@@ -1,4 +1,7 @@
-Cách dùng rất đơn giản : dùng terminal chạy chương trình với {url} {request_Number} {folder_Path?}
+Cách dùng rất đơn giản : dùng terminal chạy chương trình 
+Theo dạng mẫu như hình:
+.\BenchMarkLoad {url} {request_Number} {folder_Path}
+![image](https://github.com/TranDat1114/CSharp-Donace-Load-Test-Tool/assets/88397960/ee93fee4-41da-4a02-b913-a0f487710500)
 
 folder_Path có thể có hoặc không tùy vào là API GET hoặc POST
 add more thing
