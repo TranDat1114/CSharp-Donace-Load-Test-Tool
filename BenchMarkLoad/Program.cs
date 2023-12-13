@@ -19,7 +19,7 @@ namespace BenchMarkLoad
             string? jsonFolderPath;
             if (args.Length == 0)
             {
-                numRequests = 100000;
+                numRequests = 1000;
                 jsonFolderPath = @"D:\Code\DoAnTotNghiep\tool\LoadTest\User";
                 url = @"http://171.245.205.120:8082/api/Authentication/register";
             }
