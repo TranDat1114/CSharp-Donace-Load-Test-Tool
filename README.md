@@ -1,6 +1,8 @@
-![image](https://github.com/TranDat1114/CSharp-Donace-Load-Test-Tool/assets/88397960/f48c51f8-20d1-4ff0-be40-3eecbde28cbc)
+Cách dùng rất đơn giản : dùng terminal chạy chương trình với {url} {request_Number} {folder_Path?}
 
-Cách dùng rất đơn giản : dùng terminal chạy chương trình với {url} {request_Number} {folder_Path}
-
+folder_Path có thể có hoặc không tùy vào là API GET hoặc POST
 add more thing
-![image](https://github.com/TranDat1114/CSharp-Donace-Load-Test-Tool/assets/88397960/b2a7c32f-5cff-4ad8-873e-c3296ebf674c)
+![image](https://github.com/TranDat1114/CSharp-Donace-Load-Test-Tool/assets/88397960/32ea1ba8-5701-4564-93ae-afff2cc5a3d3)
+
+Sẽ có thể thêm nhiều chức năng nữa trong tương lai: 
+Nếu có vấn đề gì bạn vào task Issues để thêm mình sẽ fix;
