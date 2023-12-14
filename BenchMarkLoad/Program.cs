@@ -77,7 +77,7 @@ namespace BenchMarkLoad
             using HttpClient client = new();
             client.Timeout = TimeSpan.FromSeconds(200);
             client.DefaultRequestHeaders.Add("Access-Control-Allow-Origin", "*");
-            if (string.IsNullOrEmpty(jWTBearer))
+            if (!string.IsNullOrEmpty(jWTBearer))
             {
                 client.DefaultRequestHeaders.Remove("Authorization");
                 client.DefaultRequestHeaders.Add("Authorization", $"Bearer {jWTBearer}");
@@ -105,9 +105,9 @@ namespace BenchMarkLoad
             int seriesIndexSuccess = 0;
             int seriesIndexFailed = 0;
 
-            string[] jsonFiles = string.IsNullOrEmpty(jsonFolderPath) ? Directory.GetFiles(jsonFolderPath!, "*.json") : [];
+            string[] jsonFiles = !string.IsNullOrEmpty(jsonFolderPath) ? Directory.GetFiles(jsonFolderPath, "*.json") : [];
 
-            if (jsonFiles.Length == 0 && jsonFolderPath != null)
+            if (jsonFiles.Length == 0 && !string.IsNullOrEmpty(jsonFolderPath))
             {
                 Console.WriteLine("No JSON files found in the specified folder.");
                 return;
@@ -198,11 +198,11 @@ namespace BenchMarkLoad
             stopwatch.Start();
             HttpResponseMessage response;
 
-            if (jsonFolderPath != null && jsonFiles.Length == 1)
+            if (!string.IsNullOrEmpty(jsonFolderPath) && jsonFiles.Length == 1)
             {
                 response = await SendRequestWithJson(client, url, jsonFiles[0]);
             }
-            else if (jsonFolderPath != null && index < jsonFiles.Length)
+            else if (!string.IsNullOrEmpty(jsonFolderPath) && index < jsonFiles.Length)
             {
                 response = await SendRequestWithJson(client, url, jsonFiles[index]);
             }
