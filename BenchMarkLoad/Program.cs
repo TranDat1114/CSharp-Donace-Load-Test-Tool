@@ -17,11 +17,14 @@ namespace BenchMarkLoad
             int numRequests;
             string url;
             string? jsonFolderPath;
+            string? jWTBearer;
             if (args.Length == 0)
             {
-                numRequests = 1000;
-                jsonFolderPath = @"D:\Code\DoAnTotNghiep\tool\LoadTest\User";
-                url = @"http://171.245.205.120:8082/api/Authentication/register";
+                numRequests = 10;
+                //jsonFolderPath = @"D:\Code\DoAnTotNghiep\tool\LoadTest\User";
+                jsonFolderPath = @"D:\Code\DoAnTotNghiep\tool\LoadTest\Create calendar\CalendarJson";
+                url = @"http://171.245.205.120:8082/api/Calendar/create-calendar";
+                jWTBearer = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJ1c2VyXzFAZGVtby5jb20iLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImE5MzMzMjM1LWJhNzgtNDQwMy05MjcwLTA0ZWFmYzBmOWIwZCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJ1c2VyXzFAZGVtby5jb20iLCJleHAiOjI1MzQwMjI3NTYwMCwiaXNzIjoiaHR0cHM6Ly9sb2NhbGhvc3Q6NzI3MiIsImF1ZCI6Imh0dHBzOi8vbG9jYWxob3N0OjcyNzIifQ.dvDGaGd5UlKftz8EBhY002LWcrhwsoffDGYkPrsvCr0";
             }
             else
             {
@@ -44,13 +47,14 @@ namespace BenchMarkLoad
                     return;
                 }
 
-                jsonFolderPath = args.Length > 2 ? args[2] : null;
+                jWTBearer = args.Length > 2 ? args[2] : null;
+                jsonFolderPath = args.Length > 3 ? args[3] : null;
             }
 
 
             Console.WriteLine($"Benchmarking {url} with {numRequests} requests...");
 
-            await RunBenchmark(url, numRequests, jsonFolderPath);
+            await RunBenchmark(url, numRequests, jsonFolderPath, jWTBearer);
 
             Environment.Exit(0);
         }
@@ -68,10 +72,12 @@ namespace BenchMarkLoad
             return await client.PostAsync(url, content);
         }
 
-        static async Task RunBenchmark(string url, int numRequests, string? jsonFolderPath)
+        static async Task RunBenchmark(string url, int numRequests, string? jsonFolderPath, string? jWTBearer = null)
         {
             using HttpClient client = new();
             client.Timeout = TimeSpan.FromSeconds(200);
+            client.DefaultRequestHeaders.Add("Access-Control-Allow-Origin", "*");
+
             float averageResponseTime = 0;
 
             int successfulRequests = 0;
@@ -97,7 +103,7 @@ namespace BenchMarkLoad
 
             for (int i = 0; i < numRequests; i++)
             {
-                tasks.Add(SendRequestAsync(client, url, jsonFolderPath, jsonFiles, i));
+                tasks.Add(SendRequestAsync(client, url, jsonFolderPath, jsonFiles, i, jWTBearer));
 
                 if (tasks.Count == Environment.ProcessorCount || i == numRequests - 1)
                 {
@@ -172,13 +178,23 @@ namespace BenchMarkLoad
                     }));
         }
 
-        static async Task<ReponseTime> SendRequestAsync(HttpClient client, string url, string? jsonFolderPath, string[] jsonFiles, int index)
+        static async Task<ReponseTime> SendRequestAsync(HttpClient client, string url, string? jsonFolderPath, string[] jsonFiles, int index, string? JWTBearer = null)
         {
             Stopwatch stopwatch = new();
             stopwatch.Start();
             HttpResponseMessage response;
 
-            if (jsonFolderPath != null && index < jsonFiles.Length)
+
+            if (JWTBearer != null)
+            {
+                client.DefaultRequestHeaders.Remove("Authorization");
+                client.DefaultRequestHeaders.Add("Authorization", $"Bearer {JWTBearer}");
+            }
+            if (jsonFolderPath != null && jsonFiles.Length == 1)
+            {
+                response = await SendRequestWithJson(client, url, jsonFiles[0]);
+            }
+            else if (jsonFolderPath != null && index < jsonFiles.Length)
             {
                 response = await SendRequestWithJson(client, url, jsonFiles[index]);
             }
@@ -186,7 +202,7 @@ namespace BenchMarkLoad
             {
                 response = await client.GetAsync(url);
             }
-
+            Console.WriteLine(response.Headers);
             stopwatch.Stop();
             return new()
             {
