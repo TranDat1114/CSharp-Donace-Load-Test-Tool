@@ -20,7 +20,7 @@ namespace BenchMarkLoad
             string? jWTBearer;
             if (args.Length == 0)
             {
-                numRequests = 10;
+                numRequests = 999;
                 //jsonFolderPath = @"D:\Code\DoAnTotNghiep\tool\LoadTest\User";
                 jsonFolderPath = @"D:\Code\DoAnTotNghiep\tool\LoadTest\Create calendar\CalendarJson";
                 url = @"http://171.245.205.120:8082/api/Calendar/create-calendar";
@@ -77,7 +77,11 @@ namespace BenchMarkLoad
             using HttpClient client = new();
             client.Timeout = TimeSpan.FromSeconds(200);
             client.DefaultRequestHeaders.Add("Access-Control-Allow-Origin", "*");
-
+            if (string.IsNullOrEmpty(jWTBearer))
+            {
+                client.DefaultRequestHeaders.Remove("Authorization");
+                client.DefaultRequestHeaders.Add("Authorization", $"Bearer {jWTBearer}");
+            }
             float averageResponseTime = 0;
 
             int successfulRequests = 0;
@@ -87,11 +91,21 @@ namespace BenchMarkLoad
 
             double[][] series = [new double[100], new double[100]];
 
-            int numRequestsPerXTime = numRequests < 100 ? 1 : numRequests / 100;
+            int numRequestsPerXTime;
+            if (numRequests < 100)
+            {
+                numRequestsPerXTime = 1;
+            }
+            else
+            {
+                double temp = numRequests / 100.0;
+                numRequestsPerXTime = Convert.ToInt32(Math.Ceiling(temp));
+            }
 
-            int seriesIndex = 0;
+            int seriesIndexSuccess = 0;
+            int seriesIndexFailed = 0;
 
-            string[] jsonFiles = jsonFolderPath != null ? Directory.GetFiles(jsonFolderPath, "*.json") : [];
+            string[] jsonFiles = string.IsNullOrEmpty(jsonFolderPath) ? Directory.GetFiles(jsonFolderPath!, "*.json") : [];
 
             if (jsonFiles.Length == 0 && jsonFolderPath != null)
             {
@@ -103,7 +117,7 @@ namespace BenchMarkLoad
 
             for (int i = 0; i < numRequests; i++)
             {
-                tasks.Add(SendRequestAsync(client, url, jsonFolderPath, jsonFiles, i, jWTBearer));
+                tasks.Add(SendRequestAsync(client, url, jsonFolderPath, jsonFiles, i));
 
                 if (tasks.Count == Environment.ProcessorCount || i == numRequests - 1)
                 {
@@ -117,8 +131,8 @@ namespace BenchMarkLoad
                             if (responseTime.Index % numRequestsPerXTime == 0)
                             {
                                 Console.WriteLine($@"Successful: {successfulRequests}, Failed: {failedRequests}, Average response time: {averageResponseTime / successfulRequests + failedRequests} ms");
-                                series[0][seriesIndex] = responseTime.Time;
-                                seriesIndex++;
+                                series[0][seriesIndexSuccess] = responseTime.Time;
+                                seriesIndexSuccess++;
                             }
                             successfulRequests++;
                         }
@@ -132,8 +146,8 @@ namespace BenchMarkLoad
                             if (responseTime.Index % numRequestsPerXTime == 0)
                             {
                                 Console.WriteLine($@"Successful: {successfulRequests}, Failed: {failedRequests}, Average response time: {averageResponseTime / successfulRequests + failedRequests} ms");
-                                series[1][seriesIndex] = responseTime.Time;
-                                seriesIndex++;
+                                series[1][seriesIndexFailed] = responseTime.Time;
+                                seriesIndexFailed++;
 
                             }
                             failedRequests++;
@@ -178,18 +192,12 @@ namespace BenchMarkLoad
                     }));
         }
 
-        static async Task<ReponseTime> SendRequestAsync(HttpClient client, string url, string? jsonFolderPath, string[] jsonFiles, int index, string? JWTBearer = null)
+        static async Task<ReponseTime> SendRequestAsync(HttpClient client, string url, string? jsonFolderPath, string[] jsonFiles, int index)
         {
             Stopwatch stopwatch = new();
             stopwatch.Start();
             HttpResponseMessage response;
 
-
-            if (JWTBearer != null)
-            {
-                client.DefaultRequestHeaders.Remove("Authorization");
-                client.DefaultRequestHeaders.Add("Authorization", $"Bearer {JWTBearer}");
-            }
             if (jsonFolderPath != null && jsonFiles.Length == 1)
             {
                 response = await SendRequestWithJson(client, url, jsonFiles[0]);
@@ -202,7 +210,6 @@ namespace BenchMarkLoad
             {
                 response = await client.GetAsync(url);
             }
-            Console.WriteLine(response.Headers);
             stopwatch.Stop();
             return new()
             {
