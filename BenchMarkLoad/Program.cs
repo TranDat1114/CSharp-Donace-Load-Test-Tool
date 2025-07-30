@@ -77,13 +77,16 @@ namespace BenchMarkLoad
             int successfulRequests = 0;
             int failedRequests = 0;
 
+
             List<string> failedRequestsLog = [];
 
             double[][] series = [new double[100], new double[100]];
+            double[][] bandwidthSeries = [new double[100], new double[100]]; // Thêm series cho bandwidth
 
             int numRequestsPerXTime = numRequests < 100 ? 1 : numRequests / 100;
 
             int seriesIndex = 0;
+            int bandwidthSeriesIndex = 0;
 
             string[] jsonFiles = jsonFolderPath != null ? Directory.GetFiles(jsonFolderPath, "*.json") : [];
 
@@ -94,6 +97,7 @@ namespace BenchMarkLoad
             }
 
             var tasks = new List<Task<ReponseTime>>();
+
 
             for (int i = 0; i < numRequests; i++)
             {
@@ -106,13 +110,23 @@ namespace BenchMarkLoad
                     {
                         ReponseTime responseTime = await task;
 
+                        // Tính bandwidth (MB) cho mỗi request
+                        double bandwidthMB = 0;
+                        if (responseTime.Response != null && responseTime.Response.Content != null)
+                        {
+                            var contentBytes = await responseTime.Response.Content.ReadAsByteArrayAsync();
+                            bandwidthMB = contentBytes.Length / 1024.0 / 1024.0;
+                        }
+
                         if (responseTime.Response!.IsSuccessStatusCode)
                         {
                             if (responseTime.Index % numRequestsPerXTime == 0)
                             {
-                                Console.WriteLine($@"Successful: {successfulRequests}, Failed: {failedRequests}, Average response time: {averageResponseTime / successfulRequests + failedRequests} ms");
+                                Console.WriteLine($@"Successful: {successfulRequests}, Failed: {failedRequests}, Average response time: {averageResponseTime / (successfulRequests + failedRequests)} ms, Bandwidth: {bandwidthMB:F3} MB");
                                 series[0][seriesIndex] = responseTime.Time;
+                                bandwidthSeries[0][bandwidthSeriesIndex] = bandwidthMB;
                                 seriesIndex++;
+                                bandwidthSeriesIndex++;
                             }
                             successfulRequests++;
                         }
@@ -125,10 +139,11 @@ namespace BenchMarkLoad
                             }
                             if (responseTime.Index % numRequestsPerXTime == 0)
                             {
-                                Console.WriteLine($@"Successful: {successfulRequests}, Failed: {failedRequests}, Average response time: {averageResponseTime / successfulRequests + failedRequests} ms");
+                                Console.WriteLine($@"Successful: {successfulRequests}, Failed: {failedRequests}, Average response time: {averageResponseTime / (successfulRequests + failedRequests)} ms, Bandwidth: {bandwidthMB:F3} MB");
                                 series[1][seriesIndex] = responseTime.Time;
+                                bandwidthSeries[1][bandwidthSeriesIndex] = bandwidthMB;
                                 seriesIndex++;
-
+                                bandwidthSeriesIndex++;
                             }
                             failedRequests++;
                         }
@@ -138,6 +153,7 @@ namespace BenchMarkLoad
                     tasks.Clear();
                 }
             }
+
 
             Console.WriteLine($"\nSummary:");
             Console.WriteLine($"Total Requests: {numRequests}");
@@ -165,6 +181,23 @@ namespace BenchMarkLoad
                         SeriesColors =
                         [
                             AnsiColor.Green,
+                            AnsiColor.Red,
+                        ],
+                        AxisLabelLeftMargin = 1,
+                        LabelColor = AnsiColor.Aqua,
+                    }));
+
+            Console.WriteLine($"Chart: Bandwidth (MB) per {numRequestsPerXTime} requests");
+            Console.WriteLine(AsciiChart.Sharp.AsciiChart.Plot(
+                    bandwidthSeries,
+                    new Options
+                    {
+                        AxisLabelFormat = "0.000 MB",
+                        Fill = '·',
+                        Height = 15,
+                        SeriesColors =
+                        [
+                            AnsiColor.Yellow,
                             AnsiColor.Red,
                         ],
                         AxisLabelLeftMargin = 1,
