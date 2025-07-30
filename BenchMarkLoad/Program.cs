@@ -65,7 +65,13 @@ namespace BenchMarkLoad
             }
 
             var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-            return await client.PostAsync(url, content);
+            var request = new HttpRequestMessage(HttpMethod.Post, url)
+            {
+                Content = content
+            };
+            request.Headers.Add("Cache-Control", "no-cache");
+            request.Headers.Add("Pragma", "no-cache");
+            return await client.SendAsync(request);
         }
 
         static async Task RunBenchmark(string url, int numRequests, string? jsonFolderPath)
@@ -98,60 +104,52 @@ namespace BenchMarkLoad
 
             var tasks = new List<Task<ReponseTime>>();
 
-
             for (int i = 0; i < numRequests; i++)
             {
                 tasks.Add(SendRequestAsync(client, url, jsonFolderPath, jsonFiles, i));
+            }
 
-                if (tasks.Count == Environment.ProcessorCount || i == numRequests - 1)
+            var results = await Task.WhenAll(tasks);
+            foreach (var responseTime in results)
+            {
+                // Tính bandwidth (MB) cho mỗi request
+                double bandwidthMB = 0;
+                if (responseTime.Response != null && responseTime.Response.Content != null)
                 {
-                    await Task.WhenAll(tasks);
-                    foreach (var task in tasks)
-                    {
-                        ReponseTime responseTime = await task;
-
-                        // Tính bandwidth (MB) cho mỗi request
-                        double bandwidthMB = 0;
-                        if (responseTime.Response != null && responseTime.Response.Content != null)
-                        {
-                            var contentBytes = await responseTime.Response.Content.ReadAsByteArrayAsync();
-                            bandwidthMB = contentBytes.Length / 1024.0 / 1024.0;
-                        }
-
-                        if (responseTime.Response!.IsSuccessStatusCode)
-                        {
-                            if (responseTime.Index % numRequestsPerXTime == 0)
-                            {
-                                Console.WriteLine($@"Successful: {successfulRequests}, Failed: {failedRequests}, Average response time: {averageResponseTime / (successfulRequests + failedRequests)} ms, Bandwidth: {bandwidthMB:F3} MB");
-                                series[0][seriesIndex] = responseTime.Time;
-                                bandwidthSeries[0][bandwidthSeriesIndex] = bandwidthMB;
-                                seriesIndex++;
-                                bandwidthSeriesIndex++;
-                            }
-                            successfulRequests++;
-                        }
-                        else
-                        {
-                            var statusCode = responseTime.Response.StatusCode.ToString();
-                            if (!failedRequestsLog.Contains(statusCode))
-                            {
-                                failedRequestsLog.Add(statusCode);
-                            }
-                            if (responseTime.Index % numRequestsPerXTime == 0)
-                            {
-                                Console.WriteLine($@"Successful: {successfulRequests}, Failed: {failedRequests}, Average response time: {averageResponseTime / (successfulRequests + failedRequests)} ms, Bandwidth: {bandwidthMB:F3} MB");
-                                series[1][seriesIndex] = responseTime.Time;
-                                bandwidthSeries[1][bandwidthSeriesIndex] = bandwidthMB;
-                                seriesIndex++;
-                                bandwidthSeriesIndex++;
-                            }
-                            failedRequests++;
-                        }
-                        averageResponseTime += responseTime.Time;
-                    }
-
-                    tasks.Clear();
+                    var contentBytes = await responseTime.Response.Content.ReadAsByteArrayAsync();
+                    bandwidthMB = contentBytes.Length / 1024.0 / 1024.0;
                 }
+
+                if (responseTime.Response!.IsSuccessStatusCode)
+                {
+                    if (responseTime.Index % numRequestsPerXTime == 0)
+                    {
+                        Console.WriteLine($"Successful: {successfulRequests}, Failed: {failedRequests}, Average response time: {averageResponseTime / (successfulRequests + failedRequests)} ms, Bandwidth: {bandwidthMB:F3} MB");
+                        series[0][seriesIndex] = responseTime.Time;
+                        bandwidthSeries[0][bandwidthSeriesIndex] = bandwidthMB;
+                        seriesIndex++;
+                        bandwidthSeriesIndex++;
+                    }
+                    successfulRequests++;
+                }
+                else
+                {
+                    var statusCode = responseTime.Response.StatusCode.ToString();
+                    if (!failedRequestsLog.Contains(statusCode))
+                    {
+                        failedRequestsLog.Add(statusCode);
+                    }
+                    if (responseTime.Index % numRequestsPerXTime == 0)
+                    {
+                        Console.WriteLine($"Successful: {successfulRequests}, Failed: {failedRequests}, Average response time: {averageResponseTime / (successfulRequests + failedRequests)} ms, Bandwidth: {bandwidthMB:F3} MB");
+                        series[1][seriesIndex] = responseTime.Time;
+                        bandwidthSeries[1][bandwidthSeriesIndex] = bandwidthMB;
+                        seriesIndex++;
+                        bandwidthSeriesIndex++;
+                    }
+                    failedRequests++;
+                }
+                averageResponseTime += responseTime.Time;
             }
 
 
@@ -217,7 +215,10 @@ namespace BenchMarkLoad
             }
             else
             {
-                response = await client.GetAsync(url);
+                var request = new HttpRequestMessage(HttpMethod.Get, url);
+                request.Headers.Add("Cache-Control", "no-cache");
+                request.Headers.Add("Pragma", "no-cache");
+                response = await client.SendAsync(request);
             }
 
             stopwatch.Stop();
