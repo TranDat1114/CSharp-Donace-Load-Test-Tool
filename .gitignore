@@ -1,0 +1,6 @@
+.vscode/*
+.vs/*
+
+BenchMarkLoad/bin/*
+BenchMarkLoad/obj/*
+BenchMarkLoad/obj/Debug/*
