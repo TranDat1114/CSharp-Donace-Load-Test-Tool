@@ -4,3 +4,5 @@
 BenchMarkLoad/bin/*
 BenchMarkLoad/obj/*
 BenchMarkLoad/obj/Debug/*
+BenchMarkLoad/obj/Debug/net8.0/BenchMarkLoad.AssemblyInfo.cs
+BenchMarkLoad/obj/Debug/net8.0/BenchMarkLoad.AssemblyInfoInputs.cache
